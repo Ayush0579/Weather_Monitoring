@@ -339,11 +339,22 @@
 
         let historyChartInstance;
 
+        cropsPrediction = [];
+        tempcropsPrediction = [];
+
         const TempData = {
             labels: [],
             values: []
         };
         const HumiData = {
+            labels: [],
+            values: []
+        };
+        const AQIData = {
+            labels: [],
+            values: []
+        };
+        const CO2Data = {
             labels: [],
             values: []
         };
@@ -384,37 +395,78 @@
                 historyChartInstance.destroy();
             }
 
-            historyChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: title,
-                        data: values,
-                        borderColor: '#00aaff',
-                        backgroundColor: 'rgba(0, 170, 255, 0.2)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+            if(title != "Air Quality") {
+                historyChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: title,
+                            data: values,
+                            borderColor: '#00aaff',
+                            backgroundColor: 'rgba(0, 170, 255, 0.2)',
+                            fill: true
+                        }]
                     },
-                    responsive: false,
-                    maintainAspectRatio: false
-                }
-            });
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        responsive: false,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+            else {
+                historyChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'CO2 Levels(ppm)',
+                                data: CO2Data.values,
+                                borderColor: '#ffaa00',
+                                backgroundColor: 'rgba(255, 170, 0, 0.2)',
+                                fill: true,
+                            },
+                            {
+                                label: 'AQI',
+                                data: AQIData.values,
+                                borderColor: '#ff0000',
+                                backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                                fill: true,
+                            },
+                            {
+                                label: 'Overall Air Quality',
+                                data: AirData.values,
+                                borderColor: '#00aaff',
+                                backgroundColor: 'rgba(0, 170, 255, 0.2)',
+                                fill: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        responsive: false,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+            
         }
 
         function showAlert(message, disaster) {
             const alertContainer = document.getElementById('alertContainer');
             const alertMessage = document.getElementById('alertMessage');
             const alertInfo = document.getElementById('alertInfo');
-            if (disaster == 'UNKNOWN') {
-                console.log("UNKNOWN DISASTER");
-            } else {
+            if (disaster == 'UNKNOWN') {} else {
                 alertMessage.innerText = message;
                 alertInfo.innerText = "Possible chances of " + disaster;
                 alertContainer.style.display = 'flex';
@@ -457,9 +509,12 @@
                         showAlert("Disaster Alert: ", condition);
                     }
                 }
+
+                tempcropsPrediction = [];
                 
                 for (const [crop, value] of Object.entries(data.crops)) {
                     if (value === 1) {
+                        tempcropsPrediction.push(crop);
                         const li = document.createElement("li");
                         const img = document.createElement("img");
                         const source = "/Icons/" + crop + ".png";
@@ -485,13 +540,13 @@
 
                         cropList.appendChild(li);
                     }
+
+                    cropsPrediction.push(tempcropsPrediction);
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('Error occurred: ' + error.message);
             }
-
-            console.log(condition_predict);
         }
 
         widgets.forEach(widget => {
@@ -506,8 +561,9 @@
                 const altitude = parseInt(Values[1])-50;
                 const temperature = parseInt(Values[2]);
                 const humidity = parseInt(Values[3]);
-                const airQuality = parseInt(Values[4]);
-                solar = parseInt(Values[5])+10;
+                const co2 = parseInt(Values[4]);
+                const airQuality = parseInt(Values[5]);
+                solar = parseInt(Values[7]);
 
                 if (solar >= 100) {
                     solar = 100;
@@ -681,8 +737,10 @@
             const altitude = parseInt(Values[1])-50;
             const temperature = parseInt(Values[2]);
             const humidity = parseInt(Values[3]);
-            const airQuality = parseInt(Values[4]);
-            solar = parseInt(Values[5])+10;
+            const co2 = parseInt(Values[4]);
+            const airQuality = parseInt(Values[5]);
+            const aqi = parseInt(Values[6]);
+            solar = parseInt(Values[7]);
 
             if (solar >= 100) {
                 solar = 100;
@@ -699,12 +757,17 @@
             makePrediction(pressure, humidity, temperature, airQuality, solar);
 
             const now = new Date();
-            const localTime = now.toString();
+            const localTime = now.toString().replace(" (India Standard Time)","");
+            
 
             TempData.labels.push(localTime);
             TempData.values.push(temperature);
             HumiData.labels.push(localTime);
             HumiData.values.push(humidity);
+            CO2Data.labels.push(localTime);
+            CO2Data.values.push(co2);
+            AQIData.labels.push(localTime);
+            AQIData.values.push(aqi);
             AirData.labels.push(localTime);
             AirData.values.push(airQuality);
             SolarData.labels.push(localTime);
@@ -713,6 +776,8 @@
             PresData.values.push(pressure);
             AltData.labels.push(localTime);
             AltData.values.push(altitude);
+
+            console.log(CO2Data);
         };
 
         ws.onopen = function() {
@@ -724,10 +789,10 @@
         };
 
         function downloadCSV() {
-            csvContent = "Date,Time,Temperature,Humidity,Air Quality,Solar Intensity,Pressure,Altitude\n";
+            csvContent = "Date & Time,Temperature(°C),Humidity(%),Overall Air Quality(%),Solar Intensity(%),Pressure(hPa),Altitude(m),Crops\n";
 
             for (let index = 0; index < TempData.values.length; index++) {
-                const data = TempData.labels[index] + "," + TempData.values[index].toString() + "," + HumiData.values[index].toString() + "," + AirData.values[index].toString() + "," + SolarData.values[index].toString() + "," + PresData.values[index].toString() + "," + AltData.values[index].toString() + "\n";
+                const data = TempData.labels[index] + "," + TempData.values[index].toString() + "," + HumiData.values[index].toString() + "," + AirData.values[index].toString() + "," + SolarData.values[index].toString() + "," + PresData.values[index].toString() + "," + AltData.values[index].toString() + "," + cropsPrediction[index] + "\n";
 
                 console.log(index, ": ", data);
 
