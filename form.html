@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="Icons/Form_Icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil pH Form</title>
+</head>
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+    @keyframes gradientAnimation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        background: linear-gradient(135deg, #7D3F7D, #F4A261, #4DB6AC, #FFEB3B, #E57373);
+        background-size: 200% 200%;
+        animation: gradientAnimation 15s ease infinite;
+        height: 100vh;
+    }
+
+    .form_area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background-color: #EDDCD9;
+        height: auto;
+        width: 450px;
+        border: 2px solid #264143;
+        border-radius: 20px;
+        box-shadow: 3px 4px 0px 1px #E99F4C;
+        padding: 30px;
+    }
+
+    .title {
+        color: #264143;
+        font-weight: 900;
+        font-size: 3em;
+        margin-top: 30px;
+        margin-bottom: 10px
+    }
+
+    .sub_title {
+        font-size: 1.2em;
+        font-weight: 600;
+        margin: 5px 0;
+        margin-top: 20px;
+    }
+
+    .form_group {
+        display: flex;
+        flex-direction: column;
+        align-items: baseline;
+        margin: 10px;
+    }
+
+    .form_style {
+        outline: none;
+        border: 2px solid #264143;
+        box-shadow: 3px 4px 0px 1px #E99F4C;
+        width: 350px;
+        padding: 15px 12px;
+        border-radius: 4px;
+        font-size: 15px;
+        font-size: 1.1em;
+    }
+
+    .form_style:focus, .btn:focus {
+        transform: translateY(4px);
+        box-shadow: 1px 2px 0px 0px #E99F4C;
+    }
+
+    .btn {
+        padding: 18px;
+        margin: 25px 0px;
+        width: 350px;
+        font-size: 1.1em;
+        background: #DE5499;
+        border-radius: 10px;
+        font-weight: 800;
+        box-shadow: 3px 3px 0px 0px #E99F4C;
+    }
+
+    .btn:hover {
+        opacity: .9;
+    }
+
+    .link {
+        font-weight: 800;
+        color: #264143;
+        padding: 5px;
+    }
+</style>
+<body>
+    <div class="container">
+        <div class="form_area">
+            <p class="title">Soil Evaluation</p>
+            <form id="soilForm">
+                <div class="form_group">
+                    <label class="sub_title" for="pH">Soil pH</label>
+                    <input placeholder="Enter soil pH" id="phLevel" class="form_style" type="text">
+                </div>
+                <div class="form_group">
+                    <label class="sub_title" for="moisture">Soil Moisture</label>
+                    <input placeholder="Enter soil moisture (%)" id="moisture" class="form_style" type="text">
+                </div>
+                <div class="form_group">
+                    <label class="sub_title" for="fertiliser">Fertiliser Usage</label>
+                    <input placeholder="Enter time since last fertiliser use(months)" id="fertiliser" class="form_style" type="text">
+                </div>
+                <button class="btn" type="submit">SUBMIT</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('soilForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const phLevel = parseFloat(document.getElementById('phLevel').value);
+            const moisture = document.getElementById('moisture').value;
+            const fertiliser = document.getElementById('fertiliser').value;
+
+            if (isNaN(phLevel) || phLevel < 0 || phLevel > 14) {
+                alert('Please enter a valid pH level between 0 and 14.');
+                return;
+            }
+
+            if (isNaN(moisture) || moisture < 0 || moisture > 100) {
+                alert('Please enter a valid moisture level between 0 and 100.');
+                return;
+            }
+
+            alert(`Submission Successful!\nSoil pH: ${phLevel}\nSoil Moisture: ${moisture}\nFertiliser Usage: ${fertiliser}`);
+
+            window.location.href = `index.html?ph=${phLevel}moisture=${moisture}fertiliser=${fertiliser}`;
+        });
+    </script>
+</body>
+</html>
