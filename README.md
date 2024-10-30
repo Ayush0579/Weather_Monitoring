@@ -4,6 +4,8 @@
 
 This project is an IoT-based Weather Monitoring System that provides real-time weather data visualization through a web interface. It uses WebSocket technology to receive data from IoT sensors and displays various weather parameters using interactive gauges and charts.
 
+Thingspeak Channel: https://thingspeak.mathworks.com/channels/2605149
+
 ### Features
 
 1. Real-time display of temperature, humidity, air quality, solar intensity, pressure, and altitude
@@ -26,8 +28,8 @@ This project is an IoT-based Weather Monitoring System that provides real-time w
 
 1. Ensure you have a WebSocket server running on ws://localhost:8080 that sends weather data. (Run 'node app' command to run the app file)
 2. Make sure you have a Python backend server running on http://127.0.0.1:5000 for predictions. (Run 'python app.py' command to run the flask app)
-3. Place all icon images in an Icons folder in the same directory as the HTML file.
-4. Open the HTML file in a web browser. 
+3. Place all icon images in an Icons folder in the same directory as the HTML files.
+4. Open the form.html file in a web browser. 
 
 ## Usage
 
@@ -36,18 +38,21 @@ This project is an IoT-based Weather Monitoring System that provides real-time w
 3. The "Currently Growable Crops" section updates based on current weather conditions.
 4. Click the "Download Historical Data (CSV)" button to download weather data in CSV format.
 
-## Data Format
+## Miscellaneous
+### Data Format
 
 The WebSocket server should recieve data in the following format:
 pressure,altitude,temperature,humidity,airQuality,solarIntensity
 
-## Alert System
+### Alert System
 
 The system will display alerts for potential weather-related disasters based on the received data.
+The form.html page also checks for correct soil evaluation values, and alerts for errored data.
 
-## Crop Recommendation
+### Crop Recommendation
 
 The system predicts suitable crops based on current weather conditions and displays them in the sidebar.
+The AI model includes configurations for 19 crops to be checked against the recorded values.
 
 ## Customization
 
