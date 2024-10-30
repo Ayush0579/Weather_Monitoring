@@ -4,6 +4,8 @@ Values = [];
 
 condition_predict = [];
 
+upload_counter = 0;
+
 const cropList = document.getElementById('cropList');
 cropList.innerHTML = "";
 
@@ -145,7 +147,6 @@ function showAlert(message, disaster) {
 
 async function makePrediction(pressure,humidity,temperature,airQuality,solar) {
     condition_predict = [];
-    cropList.innerHTML = "";
 
     const formData = {
         pressure: pressure,
@@ -181,6 +182,8 @@ async function makePrediction(pressure,humidity,temperature,airQuality,solar) {
         }
 
         tempcropsPrediction = [];
+        
+        cropList.innerHTML = "";
         
         for (const [crop, value] of Object.entries(data.crops)) {
             if (value === 1) {
@@ -219,6 +222,26 @@ async function makePrediction(pressure,humidity,temperature,airQuality,solar) {
     }
 }
 
+async function uploadThingspeak(dataList) {
+    try {
+        const response = await fetch(`https://api.thingspeak.com/update?api_key=A1QBOSSNTO56QA9L&field1=${dataList[0]}&field2=${dataList[1]}&field3=${dataList[2]}&field4=${dataList[3]}&field5=${dataList[4]}&field6=${dataList[5]}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
+
+        if (response.ok) {
+          console.log('Data posted to ThingSpeak successfully!');
+        } else {
+          console.log('Failed to post data to ThingSpeak. Please check your API key and channel ID.');
+        }
+      } catch (error) {
+        console.error('Error posting to ThingSpeak:', error);
+        console.log('An error occurred while posting to ThingSpeak. Please try again later.');
+      }
+}
+
 widgets.forEach(widget => {
     widget.addEventListener('click', () => {
         const title = widget.querySelector('h2').innerText;
@@ -228,7 +251,7 @@ widgets.forEach(widget => {
         const section2Percent = sections[1];
 
         const pressure = parseInt(Values[0]);
-        const altitude = parseInt(Values[1])-50;
+        const altitude = parseInt(Values[1]);
         const temperature = parseInt(Values[2]);
         const humidity = parseInt(Values[3]);
         const co2 = parseInt(Values[4]);
@@ -404,7 +427,7 @@ ws.onmessage = function(event) {
     Values = data.split(",");
 
     const pressure = parseInt(Values[0]);
-    const altitude = parseInt(Values[1])-50;
+    const altitude = parseInt(Values[1]);
     const temperature = parseInt(Values[2]);
     const humidity = parseInt(Values[3]);
     const co2 = parseInt(Values[4]);
@@ -447,7 +470,12 @@ ws.onmessage = function(event) {
     AltData.labels.push(localTime);
     AltData.values.push(altitude);
 
-    console.log(CO2Data);
+    if (upload_counter == 30) {
+        upload_counter = 0;
+        uploadThingspeak([temperature,humidity, solar, co2, aqi, altitude]);
+    } else {
+        upload_counter++;
+    }
 };
 
 ws.onopen = function() {
@@ -459,10 +487,10 @@ ws.onclose = function() {
 };
 
 function downloadCSV() {
-    csvContent = "Date & Time,Temperature(°C),Humidity(%),Overall Air Quality(%),Solar Intensity(%),Pressure(hPa),Altitude(m),Crops\n";
+    csvContent = "Date & Time,Temperature(°C),Humidity(%),Overall Air Quality(%),CO2 Levels(ppm),AQI,Solar Intensity(%),Pressure(hPa),Altitude(m),Crops\n";
 
     for (let index = 0; index < TempData.values.length; index++) {
-        const data = TempData.labels[index] + "," + TempData.values[index].toString() + "," + HumiData.values[index].toString() + "," + AirData.values[index].toString() + "," + SolarData.values[index].toString() + "," + PresData.values[index].toString() + "," + AltData.values[index].toString() + "," + cropsPrediction[index] + "\n";
+        const data = TempData.labels[index] + "," + TempData.values[index].toString() + "," + HumiData.values[index].toString() + "," + AirData.values[index].toString() + "," + CO2Data.values[index].toString() + "," + AQIData.values[index].toString() + "," + SolarData.values[index].toString() + "," + PresData.values[index].toString() + "," + AltData.values[index].toString() + "," + cropsPrediction[index] + "\n";
 
         console.log(index, ": ", data);
 
@@ -484,4 +512,4 @@ function downloadCSV() {
     console.log(csvContent);
 }
 
-document.getElementById('downloadCSV').addEventListener('click', downloadCSV);          
+document.getElementById('downloadCSV').addEventListener('click', downloadCSV);
